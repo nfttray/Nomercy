@@ -1,29 +1,34 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import Login from "./Login";
-import Home from "./Home";
+import Dashboard from "./Dashboard";
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const session = sessionStorage.getItem("loggedIn");
-    if (session === "true") {
-      setIsLoggedIn(true);
+    const data = sessionStorage.getItem("user");
+    if (data) {
+      setUser(JSON.parse(data));
     }
   }, []);
 
-  const handleLogin = () => {
-    sessionStorage.setItem("loggedIn", "true");
-    setIsLoggedIn(true);
+  const handleLogin = (userData) => {
+    sessionStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("loggedIn");
-    setIsLoggedIn(false);
+    sessionStorage.removeItem("user");
+    setUser(null);
   };
 
-  return isLoggedIn ? (
-    <Home onLogout={handleLogout} />
+  const updateUser = (updatedData) => {
+    sessionStorage.setItem("user", JSON.stringify(updatedData));
+    setUser(updatedData);
+  };
+
+  return user ? (
+    <Dashboard user={user} onLogout={handleLogout} updateUser={updateUser} />
   ) : (
     <Login onLogin={handleLogin} />
   );
