@@ -2,42 +2,30 @@ import React, { useState } from "react";
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-
-    // For demo: static username and password
-    if (username === "admin" && password === "1234") {
-      onLogin();
-    } else {
-      alert("Invalid credentials");
-    }
+    const userData = {
+      username,
+      level: 1,
+      xp: 0,
+      tasks: [],
+    };
+    onLogin(userData);
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
+    <div style={{ padding: "2rem" }}>
       <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            required
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-        <div style={{ marginTop: "1rem" }}>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            required
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button style={{ marginTop: "1rem" }} type="submit">
+      <form onSubmit={handleLogin}>
+        <input
+          type="text"
+          placeholder="Enter username"
+          required
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <button type="submit" style={{ marginLeft: "1rem" }}>
           Login
         </button>
       </form>
