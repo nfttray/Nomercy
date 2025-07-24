@@ -1,11 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Login App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <title>XP Task App</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input, button { margin: 5px; }
+    .task { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+    .done { color: green; font-weight: bold; }
+    .bar { background: #eee; height: 10px; width: 100%; margin: 5px 0; }
+    .bar-fill { background: green; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- App -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function TaskItem({ task, onDone, onForgive }) {
+      return (
+        <div className="task">
+          <p><strong>{task.title}</strong> ({task.time}) — {task.duration}</p>
+          {task.done ? (
+            <span className="done">Completed</span>
+          ) : (
+            <>
+              <button onClick={onDone}>Done</button>
+              <button onClick={onForgive}>Forgive</button>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    function Dashboard({ user, setUser, logout }) {
+      const [taskText, setTaskText] = useState('');
+      const [duration, setDuration] = useState('');
+      const today = new Date().toISOString().split('T')[0];
+
+      const updateXP = (addXP) => {
+        const newXP = user.xp + addXP;
+        let newLevel = user.level;
+        if (newXP >= user.level * 500) newLevel++;
+        setUser({ ...user, xp: newXP, level: newLevel });
+      };
+
+      const addTask = () => {
+        if (!taskText.trim()) return;
+        const newTask = {
+          title: taskText,
+          time: new Date().toLocaleTimeString(),
+          duration,
+          done: false,
+        };
+        const tasks = { ...user.tasks };
+        if (!tasks[today]) tasks[today] = [];
+        tasks[today].push(newTask);
+        setUser({ ...user, tasks });
+        setTaskText('');
+        setDuration('');
+      };
+
+      const handleDone = (i) => {
+        const updated = { ...user };
+        updated.tasks[today][i].done = true;
+        setUser(updated);
+        updateXP(10);
+      };
+
+      const handleForgive = (i) => {
+        const updated = { ...user };
+        updated.tasks[today].splice(i, 1);
+        setUser(updated);
+      };
+
+      const progress = ((user.xp % (user.level * 500)) / (user.level * 500)) * 100;
+
+      return (
+        <div>
+          <h2>Welcome, {user.name}</h2>
+          <p>Level: {user.level} | XP: {user.xp}</p>
+          <div className="bar">
+            <div className="bar-fill" style={{ width: `${progress}%` }}></div>
+          </div>
+          <input placeholder="Task title" value={taskText} onChange={e => setTaskText(e.target.value)} />
+          <input placeholder="Duration" value={duration} onChange={e => setDuration(e.target.value)} />
+          <button onClick={addTask}>Add Task</button>
+          <h3>Today's Tasks</h3>
+          {(user.tasks[today] || []).map((task, i) => (
+            <TaskItem key={i} task={task} onDone={() => handleDone(i)} onForgive={() => handleForgive(i)} />
+          ))}
+          <br />
+          <button onClick={logout}>Logout</button>
+        </div>
+      );
+    }
+
+    function Login({ setUser }) {
+      const [username, setUsername] = useState('');
+      const handleLogin = () => {
+        if (username.trim()) {
+          setUser({
+            name: username,
+            xp: 0,
+            level: 1,
+            tasks: {}
+          });
+        }
+      };
+      return (
+        <div>
+          <h2>Login</h2>
+          <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter name" />
+          <button onClick={handleLogin}>Login</button>
+        </div>
+      );
+    }
+
+    function App() {
+      const [user, setUser] = useState(() => {
+        const saved = sessionStorage.getItem('user');
+        return saved ? JSON.parse(saved) : null;
+      });
+
+      useEffect(() => {
+        if (user) {
+          sessionStorage.setItem('user', JSON.stringify(user));
+        }
+      }, [user]);
+
+      const logout = () => {
+        sessionStorage.clear();
+        setUser(null);
+      };
+
+      return (
+        <div>
+          {user ? <Dashboard user={user} setUser={setUser} logout={logout} /> : <Login setUser={setUser} />}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
 </html>
